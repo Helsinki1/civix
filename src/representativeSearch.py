@@ -6,12 +6,25 @@
 from dotenv import load_dotenv
 import google.generativeai as genai
 import os
+import requests
 
 load_dotenv()
-API_KEY = os.getenv('API_KEY')
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+CIVIC_API_KEY = os.getenv('CIVIC_API_KEY')
+
+# valid offices: executiveCouncil, governmentOfficer, headOfGovernment, 
+#               headOfState, legislatorLowerBody, legislatorUpperBody
+def findReps (address, office):
+    params = {"key": CIVIC_API_KEY, "address": address, "roles": office}
+    info = requests.get("https://www.googleapis.com/civicinfo/v2/representatives", params=params)
+    if info.status_code == 200: 
+        return info.json()
+    else:
+        print("civics api request failed")
+        return None
 
 
-def findRegion (position):
+def decideRegion (position):
     if position=="Senate" or position=="House of Representatives" or position=="President": 
         return "National"
     else:
@@ -43,7 +56,7 @@ def listStances (repName, region):
 
     return responses
 
+print(findReps("340 Main St, Venice, CA 90291", "legislatorLowerBody"))
 
-
-for response in listStances("Timothy M Cain". findRegion("Senate")):
-    print(response)
+#for response in listStances("Timothy M Cain", decideRegion("Senate")):
+#    print(response)
