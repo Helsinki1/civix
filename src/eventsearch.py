@@ -1,4 +1,3 @@
-
 import requests
 from bs4 import BeautifulSoup
 from geopy.geocoders import Nominatim
@@ -6,6 +5,17 @@ import json
 from stateabb import us_state_to_abbrev
 
 # print(us_state_to_abbrev)
+
+def latlong_to_state(latitude, longitude):
+    geolocator = Nominatim(user_agent="geoapiExercises")
+    location = geolocator.reverse((latitude, longitude), exactly_one=True)
+    if location:
+        address = location.raw['address']
+        # Extract the state from the address
+        state = address.get('state', '')
+        return state
+    else:
+        return "State not found"
 
 def long_lat_state(address):
     loc = Nominatim(user_agent="Geopy Library")
@@ -15,9 +25,9 @@ def long_lat_state(address):
     #print(str(getLoc).split(","))
     latitude, longitude = getLoc.latitude, getLoc.longitude
 
-    state = str(getLoc).split(",")[4]
+    state = latlong_to_state(latitude, longitude)
 
-    return {"Address": address, "longitude": longitude, "latitude": latitude, "State": us_state_to_abbrev[state.lstrip()]}
+    return {"Address": address, "longitude": longitude, "latitude": latitude, "State": state}
 
 
 def scrape_event_data(url):
@@ -67,6 +77,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
 
