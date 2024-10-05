@@ -10,14 +10,16 @@ import os
 load_dotenv()
 API_KEY = os.getenv('API_KEY')
 
-repName = "Timothy M Cain"
-position = "Senate"
-region = "National"
-issues = []
 
-if position=="Senate" or position=="House of Representatives" or position=="President": 
-    region = "National"
-    issues = ["Fighting Poverty and Unemployment",
+def findRegion (position):
+    if position=="Senate" or position=="House of Representatives" or position=="President": 
+        return "National"
+    else:
+        return "Local"
+
+def listStances (repName, region):
+    if region == "National":
+        issues = ["Fighting Poverty and Unemployment",
                 "Taxes for Each Income Bracket",
                 "Accessible Healthcare",
                 "Education",
@@ -25,21 +27,23 @@ if position=="Senate" or position=="House of Representatives" or position=="Pres
                 "LGBTQ+ Rights",
                 "International Relations",
                 "Immigration"]
-else: 
-    region = "Local"
-    issues = ["Fighting Poverty and Unemployment",
+    else: 
+        issues = ["Fighting Poverty and Unemployment",
                 "Affordable Housing",
                 "Education",
                 "Climate Crisis",
                 "Law Enforcement"]
 
+    genai.configure(api_key=API_KEY)
+    model = genai.GenerativeModel("gemini-1.5-flash")
 
-genai.configure(api_key=API_KEY)
-model = genai.GenerativeModel("gemini-1.5-flash")
+    responses = []
+    for issue in issues:
+        responses.append(issue +": "+ model.generate_content("Explain "+repName+"'s stance on "+issue+" in 10 to 15 words").text)
 
-responses = []
-for issue in issues:
-    responses.append(issue +": "+ model.generate_content("Explain "+repName+"'s stance on "+issue+" in 10 to 15 words").text)
+    return responses
 
-for response in responses:
+
+
+for response in listStances("Timothy M Cain". findRegion("Senate")):
     print(response)
