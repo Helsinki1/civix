@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voting Venue Finder</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Find Your Nearest Voting Venue</h1>
+        <form method="POST" action="/">
+            <label for="address">Enter your address:</label>
+            <input type="text" id="address" name="address" placeholder="Enter address" required>
+            <button type="submit">Find Voting Venue</button>
+        </form>
+
+        {% if election_info %}
+            <h2>Election Information for {{ address }}</h2>
+            <ul>
+                <li><strong>Election Day:</strong> {{ election_info.election_day }}</li>
+            </ul>
+        {% endif %}
+
+        {% if polling_locations %}
+            <h2>Polling Locations:</h2>
+            <ul>
+                {% for location in polling_locations %}
+                    <li>
+                        <strong>{{ location.address.locationName }}</strong><br>
+                        {{ location.address.line1 }}, {{ location.address.city }}, {{ location.address.state }} {{ location.address.zip }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% elif election_info %}
+            <p>No polling locations found for this address.</p>
+        {% else %}
+            <p>We encountered an issue retrieving election information. Please try again later.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
