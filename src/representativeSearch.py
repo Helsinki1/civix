@@ -3,10 +3,12 @@
 #  -d '{"contents":[{"parts":[{"text":"Explain how AI works"}]}]}' \
 #  -X POST 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyBCQXD1NjxM2z1V7_m9qv8CLhFdFb-FDl0'
 
-API_KEY = "AIzaSyBCQXD1NjxM2z1V7_m9qv8CLhFdFb-FDl0"
-
+from dotenv import load_dotenv
 import google.generativeai as genai
 import os
+
+load_dotenv()
+API_KEY = os.getenv('API_KEY')
 
 repName = "Timothy M Cain"
 position = "Senate"
