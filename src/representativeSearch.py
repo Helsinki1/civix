@@ -17,11 +17,18 @@ CIVIC_API_KEY = os.getenv('CIVIC_API_KEY')
 def findReps (address, office):
     params = {"key": CIVIC_API_KEY, "address": address, "roles": office}
     info = requests.get("https://www.googleapis.com/civicinfo/v2/representatives", params=params)
-    if info.status_code == 200: 
-        return info.json()
-    else:
+    if info.status_code != 200:
         print("civics api request failed")
         return None
+
+    info_json = info.json()
+
+    officials = info_json.get('officials', [])
+    name_and_party = []
+    for official in officials:
+        name_and_party.append(official.get('name') + " - " + official.get('party'))
+
+    return name_and_party
 
 
 def decideRegion (position):
@@ -38,7 +45,6 @@ def listStances (repName, region):
                 "Education",
                 "Climate Crisis",
                 "LGBTQ+ Rights",
-                "International Relations",
                 "Immigration"]
     else: 
         issues = ["Fighting Poverty and Unemployment",
@@ -47,16 +53,35 @@ def listStances (repName, region):
                 "Climate Crisis",
                 "Law Enforcement"]
 
-    genai.configure(api_key=API_KEY)
+    genai.configure(api_key=GEMINI_API_KEY)
     model = genai.GenerativeModel("gemini-1.5-flash")
 
     responses = []
     for issue in issues:
-        responses.append(issue +": "+ model.generate_content("Explain "+repName+"'s stance on "+issue+" in 10 to 15 words").text)
+        responses.append(issue +": "+ model.generate_content("Explain "+repName+"'s stance on "+issue+" in 15 words or less").text)
 
     return responses
 
-print(findReps("340 Main St, Venice, CA 90291", "legislatorLowerBody"))
+def summarize (repName):
+    genai.configure(api_key=GEMINI_API_KEY)
+    model = genai.GenerativeModel("gemini-1.5-flash")
+
+    response = model.generate_content("Give me a description of this politican that includes their party and position in 15 words or less: "+repName)
+    return response.text
+
+
+def describeNearbyReps (address):
+    reps = findReps(address, "legislatorUpperBody")
+
+    for rep in reps:
+        print(summarize(rep))
+        stances = listStances(rep, "National")
+        for i in range(len(stances)):
+            print(stances[i])
+
+
+
+print(describeNearbyReps("215 Oakwood Terrace Ct, Ballwin, MO 63021"))
 
 #for response in listStances("Timothy M Cain", decideRegion("Senate")):
 #    print(response)
