@@ -6,6 +6,7 @@
 from dotenv import load_dotenv
 import google.generativeai as genai
 import os
+import time
 import requests
 
 load_dotenv()
@@ -39,27 +40,24 @@ def decideRegion (position):
 
 def listStances (repName, region):
     if region == "National":
-        issues = ["Fighting Poverty and Unemployment",
-                "Taxes for Each Income Bracket",
-                "Accessible Healthcare",
-                "Education",
-                "Climate Crisis",
-                "LGBTQ+ Rights",
+        issues = ["Fighting Poverty and Unemployment, ",
+                "Taxes for Each Income Bracket, ",
+                "Accessible Healthcare, ",
+                "Education, ",
+                "Climate Crisis, ",
+                "LGBTQ+ Rights, ",
                 "Immigration"]
     else: 
-        issues = ["Fighting Poverty and Unemployment",
-                "Affordable Housing",
-                "Education",
-                "Climate Crisis",
+        issues = ["Fighting Poverty and Unemployment, ",
+                "Affordable Housing, ",
+                "Education, ",
+                "Climate Crisis, ",
                 "Law Enforcement"]
 
     genai.configure(api_key=GEMINI_API_KEY)
     model = genai.GenerativeModel("gemini-1.5-flash")
 
-    responses = []
-    for issue in issues:
-        responses.append(issue +": "+ model.generate_content("Explain "+repName+"'s stance on "+issue+" in 15 words or less").text)
-
+    responses = model.generate_content("Explain "+repName+"'s stances using (100 words) on these issues: "+"".join(issues)).text
     return responses
 
 def summarize (repName):
@@ -72,16 +70,16 @@ def summarize (repName):
 
 def describeNearbyReps (address):
     reps = findReps(address, "legislatorUpperBody")
+    summaries = []
 
     for rep in reps:
-        print(summarize(rep))
-        stances = listStances(rep, "National")
-        for i in range(len(stances)):
-            print(stances[i])
+        summaries.append(summarize(rep) + listStances(rep, "National"))
+    
+    return reps, summaries
 
 
 
-print(describeNearbyReps("215 Oakwood Terrace Ct, Ballwin, MO 63021"))
+#print(describeNearbyReps("215 Oakwood Terrace Ct, Ballwin, MO 63021"))
 
 #for response in listStances("Timothy M Cain", decideRegion("Senate")):
 #    print(response)
