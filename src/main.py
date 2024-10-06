@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 import requests
 from geopy.geocoders import Nominatim
 from bs4 import BeautifulSoup
@@ -11,20 +11,41 @@ app = Flask(__name__)
 # Initialize the geolocator
 loc = Nominatim(user_agent='user_agent')
 
-# Home route
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/')
 def index():
-    if request.method == 'POST':
-        address = request.form['address']
-        election_info, polling_locations = get_election_info(address)
-        # Slice the first 5 polling locations
-        top_5_locations = polling_locations[:5]
+    return render_template('index.html')
 
-        # Fetch events for the location and limit to top 5 events
-        event_info = get_local_events(address)
+@app.route('/api/voting-venue', methods=['POST'])
+def get_voting_venue():
+    data = request.get_json()
+    address = data.get('address')
+    
+    if not address:
+        return jsonify({"error": "Address is required"}), 400
 
-        return render_template('index.html', election_info=election_info, polling_locations=top_5_locations, event_info=event_info, address=address)
-    return render_template('index.html', election_info=None, polling_locations=None, event_info=None)
+    # Get election info
+    election_info, polling_locations = get_election_info(address)
+    top_5_locations = polling_locations[:5]  # Limit to 5 polling locations
+
+    return jsonify({
+        "election_info": election_info,
+        "polling_locations": top_5_locations
+    })
+
+@app.route('/api/events', methods=['POST'])
+def get_events():
+    data = request.get_json()
+    address = data.get('address')
+    
+    if not address:
+        return jsonify({"error": "Address is required"}), 400
+
+    # Get events info
+    event_info = get_local_events(address)
+    
+    return jsonify({
+        "event_info": event_info
+    })
 
 # Function to call Google Civic Information API for election day and polling locations
 def get_election_info(address):
@@ -40,9 +61,9 @@ def get_election_info(address):
     else:
         return None, []
 
-# Function to get latitude, longitude and state from address
+# Function to get latitude, longitude, and state from the address
 def long_lat_state(address):
-    getLoc = loc.geocode(address)  
+    getLoc = loc.geocode(address)
     latitude, longitude = getLoc.latitude, getLoc.longitude
     state = latlong_to_state(latitude, longitude)
     return {"Address": address, "longitude": longitude, "latitude": latitude, "State": state}
@@ -57,7 +78,7 @@ def latlong_to_state(latitude, longitude):
     else:
         return "State not found"
 
-# Function to scrape event data from Eventbrite based on state
+# Function to scrape event data from Eventbrite based on the state
 def scrape_event_data(state):
     url = f"https://eventbrite.com/d/{state}/politics-and-government/"
     response = requests.get(url)
@@ -87,7 +108,7 @@ def scrape_event_data(state):
         print(f"Error fetching the page: {response.status_code}")
     return []
 
-# Function to get event information based on address and limit to top 5
+# Function to get event information based on the address and limit to the top 5
 def get_local_events(address):
     info = long_lat_state(address)
     state = info["State"]
