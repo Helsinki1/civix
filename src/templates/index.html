@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voting Venue Finder</title>
+    <title>Voting Venue and Event Finder</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <div class="container">
-        <h1>Find Your Nearest Voting Venue</h1>
+        <h1>Find Your Nearest Voting Venue and Events</h1>
         <form method="POST" action="/">
             <label for="address">Enter your address:</label>
             <input type="text" id="address" name="address" placeholder="Enter address" required>
-            <button type="submit">Find Voting Venue</button>
+            <button type="submit">Find</button>
         </form>
 
         {% if election_info %}
@@ -23,7 +23,7 @@
         {% endif %}
 
         {% if polling_locations %}
-            <h2>Polling Locations:</h2>
+            <h2>Top 5 Polling Locations:</h2>
             <ul>
                 {% for location in polling_locations %}
                     <li>
@@ -34,8 +34,20 @@
             </ul>
         {% elif election_info %}
             <p>No polling locations found for this address.</p>
-        {% else %}
-            <p>We encountered an issue retrieving election information. Please try again later.</p>
+        {% endif %}
+
+        {% if event_info %}
+            <h2>Top 5 Local Events:</h2>
+            <ul>
+                {% for event in event_info %}
+                    <li>
+                        <strong>{{ event.name }}</strong><br>
+                        Latitude: {{ event.latitude }}, Longitude: {{ event.longitude }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% elif election_info %}
+            <p>No events found in this area.</p>
         {% endif %}
     </div>
 </body>
